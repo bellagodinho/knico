@@ -33,7 +33,7 @@ export default function App() {
   return (
     <>
       <header className="bar">
-        <h1>Skein</h1>
+        <h1>Knicô</h1>
         <nav>
           <button className={tab === 'home' ? 'tab on' : 'tab'} onClick={() => setTab('home')}>Home</button>
           <button className={tab === 'diag' ? 'tab on' : 'tab'} onClick={() => setTab('diag')}>Diagnostics</button>

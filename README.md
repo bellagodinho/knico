@@ -1,4 +1,4 @@
-# Skein
+# Knicô
 
 A free, local-first knitting and crochet notebook. Your data stays on your device.
 

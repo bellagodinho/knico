@@ -12,8 +12,8 @@ export default defineConfig({
       // Precache fonts and icons too, so the app works offline.
       workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg}'] },
       manifest: {
-        name: 'Skein',
-        short_name: 'Skein',
+        name: 'Knicô',
+        short_name: 'Knicô',
         start_url: './',
         scope: './',
         display: 'standalone',
