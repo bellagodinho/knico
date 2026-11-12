@@ -63,7 +63,7 @@ export default function Settings() {
       <div className="card">
         <strong>Backup</strong>
         <div className="muted small">
-          On this device: {counts ? `${counts.projects} projects, ${counts.patterns} patterns` : '…'}. Last backup: {lastAt ? new Date(lastAt).toLocaleDateString() : 'never'}.
+          On this device: {counts ? `${counts.projects} project${counts.projects === 1 ? '' : 's'}, ${counts.patterns} pattern${counts.patterns === 1 ? '' : 's'}` : '…'}. Last backup: {lastAt ? new Date(lastAt).toLocaleDateString() : 'never'}.
         </div>
         {stale && <div className="warn">Your data only exists on this device. Make a backup.</div>}
         <div className="row actions">

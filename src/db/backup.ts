@@ -13,12 +13,15 @@ export async function buildBackup(): Promise<Uint8Array> {
     patterns: await db.patterns.toArray(),
     counters: await db.counters.toArray(),
     counterEvents: await db.counterEvents.toArray(),
+
     // JSON cannot hold binary data, so file metadata goes here and the bytes go in the zip.
     files: files.map(({ blob, ...meta }) => meta),
   }
+
   const entries: Record<string, Uint8Array> = {
     'data.json': strToU8(JSON.stringify({ ...FORMAT, exportedAt: Date.now(), tables })),
   }
+
   for (const f of files) entries[`files/${f.id}`] = new Uint8Array(await f.blob.arrayBuffer())
   return zipSync(entries)
 }
@@ -27,15 +30,18 @@ export async function restoreBackup(bytes: Uint8Array): Promise<void> {
   // Validate everything BEFORE touching the database, so a bad file changes nothing.
   const entries = unzipSync(bytes)
   if (!entries['data.json']) throw new Error('Not a Knico backup (data.json is missing).')
+
   const data = JSON.parse(strFromU8(entries['data.json']))
   if (data.app !== FORMAT.app) throw new Error('Not a Knico backup.')
   if (data.version > FORMAT.version) throw new Error('This backup is from a newer version of the app. Update first.')
+
   const t = data.tables
   const files: StoredFile[] = t.files.map((m: Omit<StoredFile, 'blob'>) => {
     const b = entries[`files/${m.id}`]
     if (!b) throw new Error(`Backup is missing the file "${m.name}".`)
     return { ...m, blob: new Blob([b.slice().buffer], { type: m.type }) }
   })
+
   // One transaction: either everything is replaced or nothing is.
   await db.transaction('rw', db.tables, async () => {
     await Promise.all(db.tables.map((table) => table.clear()))
@@ -49,16 +55,29 @@ export async function restoreBackup(bytes: Uint8Array): Promise<void> {
 }
 
 // iOS home-screen apps handle downloads poorly, so prefer the share sheet ("Save to Files").
-export async function saveBackupFile(bytes: Uint8Array, name: string) {
-  const file = new File([bytes.slice().buffer], name, { type: 'application/zip' })
-  if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: name })
-    return
-  }
+function download(file: File) {
   const url = URL.createObjectURL(file)
   const a = document.createElement('a')
   a.href = url
-  a.download = name
+  a.download = file.name
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 10000)
+}
+
+export async function saveBackupFile(bytes: Uint8Array, name: string) {
+  const file = new File([bytes.slice().buffer], name, { type: 'application/zip' })
+
+  // Phones: the share sheet ("Save to Files") works best. Desktops: a plain download is more reliable.
+  const touch = matchMedia('(pointer: coarse)').matches
+  if (touch && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name })
+      return
+    } catch (e) {
+      // Closing the sheet is a choice, not a failure: pass it up so no "backup done" is recorded.
+      if (e instanceof DOMException && e.name === 'AbortError') throw e
+    }
+  }
+  
+  download(file)
 }
