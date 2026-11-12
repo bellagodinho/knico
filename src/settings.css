@@ -1,0 +1,6 @@
+.seg { display: flex; gap: .25rem; margin: .75rem 0; }
+.actions { margin-top: .75rem; gap: .5rem; flex-wrap: wrap; justify-content: flex-start; }
+.warn { margin-top: .5rem; color: var(--bad); font-size: .9rem; }
+.status { margin-top: .75rem; }
+.phases li.done strong::after { content: ' (done)'; color: var(--muted); font-weight: 500; }
+@media (max-width: 30rem) { .bar { flex-wrap: wrap; } .bar nav { order: 3; flex-basis: 100%; } }
