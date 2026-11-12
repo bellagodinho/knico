@@ -62,15 +62,23 @@ const ravelryCheck = (user: string, key: string): Check => ({
   title: 'Ravelry API from the browser',
   why: 'Decides if pattern import can live in the app or needs a PC helper.',
   run: async () => {
-    if (!user || !key) throw new Error('Enter a username and key first')
+    const u = user.trim(), k = key.trim() // phones often add stray spaces
+
+    if (!u || !k) throw new Error('Enter a username and key first')
+    const url = 'https://api.ravelry.com/patterns/search.json?query=socks&page_size=1'
+
+    // Probe 1: 'no-cors' skips the CORS check, so it fails only on real network problems.
+    try { await fetch(url, { mode: 'no-cors' }) }
+
+    catch { throw new Error('Network: cannot reach api.ravelry.com from this device') }
+    // Probe 2: the real call. If probe 1 passed and this fails, it is CORS or bad credentials.
     let res: Response
     try {
-      res = await fetch('https://api.ravelry.com/patterns/search.json?query=socks&page_size=1', {
-        headers: { Authorization: 'Basic ' + btoa(`${user}:${key}`) },
-      })
+      res = await fetch(url, { headers: { Authorization: 'Basic ' + btoa(`${u}:${k}`) } })
     } catch {
-      throw new Error('Blocked before any response (most likely CORS or network)')
+      throw new Error(`Reachable, but the response was blocked (CORS or wrong credentials). Origin: ${location.origin}`)
     }
+    
     if (!res.ok) throw new Error(`Ravelry answered HTTP ${res.status}`)
     const data = await res.json()
     return `OK, ${data.paginator?.results ?? '?'} results for "socks"`
@@ -97,6 +105,7 @@ export default function Diagnostics() {
     <section>
       <h2>Device diagnostics</h2>
       <p className="muted">Run each test on your iPhone from the installed app, then send me the results.</p>
+
       {checks.map((c) => (
         <div className="card" key={c.id}>
           <div className="row">
@@ -106,12 +115,14 @@ export default function Diagnostics() {
             </div>
             <button onClick={() => run(c)}>Run</button>
           </div>
+
           {c.id === 'ravelry' && (
             <div className="fields">
               <input placeholder="Ravelry username (read-… key)" value={user} onChange={(e) => setUser(e.target.value)} autoCapitalize="off" />
               <input placeholder="Ravelry key" type="password" value={key} onChange={(e) => setKey(e.target.value)} />
             </div>
           )}
+          
           {results[c.id] && <div className={`result ${results[c.id].state}`}>{results[c.id].state}: {results[c.id].detail}</div>}
         </div>
       ))}
