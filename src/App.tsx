@@ -2,39 +2,15 @@ import { useEffect, useState } from 'react'
 import { useTheme } from './theme'
 import { APP_NAME } from './config'
 import Diagnostics from './Diagnostics'
+import Projects from './Projects'
 import Settings from './Settings'
 
-const phases = [
-  ['Foundation', 'Starter app, theme, install on iPhone, device tests', 'done'],
-  ['Data layer', 'Database schema, units setting, backup and restore', 'now'],
-  ['Projects and row counter', 'The core loop you will use daily', ''],
-  ['Pattern library', 'Manual entry, PDF upload and viewer', ''],
-  ['Ravelry import', 'Pattern search and details', ''],
-] as const
-
-type Tab = 'home' | 'settings' | 'diag'
-const tabs: [Tab, string][] = [['home', 'Home'], ['settings', 'Settings'], ['diag', 'Diagnostics']]
-
-function Home() {
-  return (
-    <section>
-      <h2>Your craft notebook</h2>
-      <p className="muted">Projects, patterns and yarn, stored on this device.</p>
-      <ul className="phases">
-        {phases.map(([name, desc, state]) => (
-          <li key={name} className={state}>
-            <strong>{name}</strong>
-            <span className="muted">{desc}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
+type Tab = 'projects' | 'settings' | 'diag'
+const tabs: [Tab, string][] = [['projects', 'Projects'], ['settings', 'Settings'], ['diag', 'Diagnostics']]
 
 export default function App() {
   const { theme, toggle } = useTheme()
-  const [tab, setTab] = useState<Tab>('home')
+  const [tab, setTab] = useState<Tab>('projects')
 
   // Ask the browser not to evict our data. Safe to call repeatedly.
   useEffect(() => { void navigator.storage?.persist?.() }, [])
@@ -52,7 +28,7 @@ export default function App() {
           {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
       </header>
-      <main>{tab === 'home' ? <Home /> : tab === 'settings' ? <Settings /> : <Diagnostics />}</main>
+      <main>{tab === 'projects' ? <Projects /> : tab === 'settings' ? <Settings /> : <Diagnostics />}</main>
     </>
   )
 }

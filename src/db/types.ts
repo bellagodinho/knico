@@ -25,13 +25,17 @@ export interface Pattern {
   createdAt: number
 }
 
+// "Every N from S": fires when value >= from and (value - from) is a multiple of every.
+export interface Reminder { every: number; from: number; text: string }
+
 export interface Counter {
   id?: number
   projectId: number
   label: string
   value: number
   step: number
-  target?: number
+  target?: number // with a target, a counter doubles as a repeat counter ("3 / 8")
+  reminders?: Reminder[] // added in Phase 2; older records lack it, so always use `?? []`
 }
 
 // Append-only log: every tap is a row. The activity tracker is built from this later.
